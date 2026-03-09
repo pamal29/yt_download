@@ -65,3 +65,16 @@ def fetch_info(body: FetchRequest):
       info = ydl.exract_info(body.url, download= False)
   except yt_dlp.utils.DownloadError as e:
     raise HTTPException(status_code=400, detail= str(e))
+
+  is_playlist = info.get("_type") == "playlist"
+
+  if is_playlist:
+    entries = info.get("entries") or []
+    return{
+      "type": "playlist",
+      "title": info.get("title", "unknown playlist"),
+      "channel": info.get("uploader", ""),
+      "count": len(entries),
+      "thumb": entries[0].get("thumbnail") if entries else None,
+    }
+  
