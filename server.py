@@ -77,4 +77,12 @@ def fetch_info(body: FetchRequest):
       "count": len(entries),
       "thumb": entries[0].get("thumbnail") if entries else None,
     }
-  
+  else:
+    duration = info.get("duration",0)
+    return{
+      "type": "video",
+      "title": info.get("title", "unknown"),
+      "channel": info.get("uploader", ""),
+      "duration":seconds_to_hms(duration),
+      "thumb": info.get("thumbnail")
+    }
