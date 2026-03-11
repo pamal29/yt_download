@@ -101,3 +101,14 @@ def start_download(body: DownloadRequest):
   return {"job_id": job_id}
 
 def _run_download(job_id:str, body:DownloadRequest):
+  """Runs in a bg thread, updates jobs[job_id] until complete or error"""
+  os.makedirs(body.output_dir, exist_ok=True)
+
+  def progress_hook(d):
+    if d["status"] == "downloading":
+      try:
+        downloaded = d.get("downloaded_bytes",0)
+        total = d.get("total_bytes") or d.get("total_bytes_estimate") or 1
+        pct = int(downloaded/total * 100) 
+      except Exception:
+        pct = 0
