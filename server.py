@@ -14,7 +14,7 @@ from pydantic import BaseModel
 app = FastAPI()
 
 #allow react to dev server
-app.add.middleware(
+app.add_middleware(
   CORSMiddleware,
   allow_origins=["https://localhost:5173", "http://localhost:3000"],
   allow_methods=["*"],
@@ -24,30 +24,30 @@ app.add.middleware(
 #in-memory job store
 jobs: dict={}
 
-DEFAULT_OUTPUT = str(Path.home()/"Downloads"/"YT_Downloads")
+DEFAULT_OUTPUT = str(path.home()/"Downloads"/"YT_Downloads")
 
 
 #request models
 class FetchRequest(BaseModel):
   url:str
 
-class DownloadRequest(Basemodel):
+class DownloadRequest(BaseModel):
   url:str
   quality:str
   output_dir: Optional[str] = DEFAULT_OUTPUT
 
   #helpers
 
-  QUALITY_MAP = {
-    "1080": "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
-    "720":  "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=720]+bestaudio/best[height<=720]/best",
-    "best": "bestvideo+bestaudio/best",
-  }
+QUALITY_MAP = {
+  "1080": "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
+  "720":  "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=720]+bestaudio/best[height<=720]/best",
+  "best": "bestvideo+bestaudio/best",
+}
 
-  def seconds_to_hws(secs:int) -> str:
-    m, s = divmod(int(secs),60)
-    h, m = divmod(m, 60)
-    return f"{h}:{m:02d}:{s:02d}" if h else f"{m}:{s:02d}"
+def seconds_to_hws(secs:int) -> str:
+  m, s = divmod(int(secs),60)
+  h, m = divmod(m, 60)
+  return f"{h}:{m:02d}:{s:02d}" if h else f"{m}:{s:02d}"
 
 #ROUTES
 
@@ -58,7 +58,7 @@ def root():
 @app.post("/fetch")
 def fetch_info(body: FetchRequest):
   """Return video/playlist metadata without downloading"""
-  ops ={"quiet":True, "no_warnings": True, "skip_download":True}
+  opts ={"quiet":True, "no_warnings": True, "skip_download":True}
 
   try:
     with yt.yt_dlp.YoutubeDL(opts) as ydl:
@@ -86,3 +86,18 @@ def fetch_info(body: FetchRequest):
       "duration":seconds_to_hms(duration),
       "thumb": info.get("thumbnail")
     }
+
+@app.post("/download")
+def start_download(body: DownloadRequest):
+  """Kick off a background download. Returns a job_id immediately."""
+  job_id =str(uuid.uuid4())
+  jobs[job_id] = {"precent": 0, "speed": "-", "eta": "-", "status": "starting", "error": None}
+
+  # run download bg so http returns quickly
+  import threading
+  thread = threading.Thread(target=_run_download, args=(job_id, body), daemon=True)
+  thread.start()
+
+  return {"job_id": job_id}
+
+def _run_download(job_id:str, body:DownloadRequest):
