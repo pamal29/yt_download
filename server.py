@@ -112,12 +112,13 @@ def _run_download(job_id:str, body:DownloadRequest):
         pct = int(downloaded/total * 100) 
       except Exception:
         pct = 0
-    speed = d.get("speed") or 0
-    speed_mb = f"{speed / 1_048_576: .1f} MB/s" if speed else "—"
-    eta_raw = d.get("eta") or 0
-    eta_str = f"{eta_raw}s" if eta_raw else "—" 
+      speed = d.get("speed") or 0
+      speed_mb = f"{speed / 1_048_576: .1f} MB/s" if speed else "—"
+      eta_raw = d.get("eta") or 0
+      eta_str = f"{eta_raw}s" if eta_raw else "—" 
 
-    jobs[job_id].update({"precent": pct, "speed": speed_mb, "eta": eta_str, "status": "downloading"})
-    
+      jobs[job_id].update({"percent": pct, "speed": speed_mb, "eta": eta_str, "status": "downloading"})
 
+    elif d["status"] == "finished":
+      jobs[job_id].update({"percent": 100, "status": "merging", "speed": "—", "eta": "—"})
 
