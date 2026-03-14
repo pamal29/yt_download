@@ -134,5 +134,12 @@ def _run_download(job_id:str, body:DownloadRequest):
     "fragment_retries": 5
   }
 
-  
+  try:
+    with yt_dlp.YoutubeDL(opts) as ydl:
+      ydl.download([body.url])
+    jobs[job_id]["status"] = "done"
+
+  except Exception as e:
+    jobs[job_id]["status"] = "error"
+    jobs[job_id]["error"] = str(e)
 
