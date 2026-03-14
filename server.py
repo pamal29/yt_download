@@ -151,5 +151,21 @@ def get_progress(job_id: str):
     raise HTTPException(status_code=404, detail="Job not found")
   return jobs[job_id]
 
-  
+@app.get("/progress/{job_id}/stream")
+def stream_progress(job_id:str):
+  """server sent events stream- alternative to polling"""
+  if job_id not in jobs:
+    raise HTTPException(status_code=404, detail="job not found")
+
+  import json,time
+
+  def event_genrator():
+    while True:
+      job = jobs.get(job_id, {})
+      yield f"data: {json.dumps(job)}\n\n"
+      if job.get("status") in ("done", "error"):
+        break
+      time.sleep(0.5)
+
+  return StreamingResponse(event_genrator(), media_type="text/event-stream")
 
