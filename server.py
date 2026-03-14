@@ -122,3 +122,17 @@ def _run_download(job_id:str, body:DownloadRequest):
     elif d["status"] == "finished":
       jobs[job_id].update({"percent": 100, "status": "merging", "speed": "—", "eta": "—"})
 
+  fmt = QUALITY_MAP.get(body.quality, QUALITY_MAP["720"])
+  opts = {
+    "format": fmt,
+    "outtmpl": os.path.join(body.output_dir, "%(title)s [%(id)s].%(ext)s"),
+    "merget_output_format": "mp4",
+    "noplaylist": True,
+    "progress_hooks":[progress_hook],
+    "postprocessors": [{"key": "FFmpegVideoConvertor", "preferdformat": "mp4"}],
+    "retries": 5,
+    "fragment_retries": 5
+  }
+
+  
+
