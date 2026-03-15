@@ -180,3 +180,5 @@ def stream_progress(job_id: str):
             time.sleep(0.5)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+#uvicorn server:app --reload --port 8000
