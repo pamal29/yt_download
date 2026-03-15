@@ -18,7 +18,6 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-# ── CORS — allow React dev server ──────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],
@@ -26,25 +25,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── In-memory job store ────────────────────────────────────────────────────
-# { job_id: { "percent": 0, "speed": "—", "eta": "—", "status": "downloading", "error": None } }
+
 jobs: dict = {}
 
 DEFAULT_OUTPUT = str(Path.home() / "Downloads" / "YT_Downloads")
 
 
-# ── Request models ─────────────────────────────────────────────────────────
 
 class FetchRequest(BaseModel):
     url: str
 
 class DownloadRequest(BaseModel):
     url: str
-    quality: str          # "720" | "1080" | "best"
+    quality: str          
     output_dir: Optional[str] = DEFAULT_OUTPUT
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────
 
 QUALITY_MAP = {
     "1080": "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
@@ -58,7 +54,6 @@ def seconds_to_hms(secs: int) -> str:
     return f"{h}:{m:02d}:{s:02d}" if h else f"{m}:{s:02d}"
 
 
-# ── Routes ─────────────────────────────────────────────────────────────────
 
 @app.get("/")
 def root():
@@ -103,7 +98,6 @@ def start_download(body: DownloadRequest):
     job_id = str(uuid.uuid4())
     jobs[job_id] = {"percent": 0, "speed": "—", "eta": "—", "status": "starting", "error": None}
 
-    # Run download in a background thread so the HTTP response returns instantly
     import threading
     thread = threading.Thread(target=_run_download, args=(job_id, body), daemon=True)
     thread.start()

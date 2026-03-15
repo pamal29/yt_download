@@ -25,7 +25,7 @@ const STATUS_LABELS = {
   error: "Failed ✗",
 };
 
-const MOCK_HISTORY = [
+const HISTORY = [
 ];
 
 const Grain = () => (
@@ -180,7 +180,7 @@ export default function App() {
   const [toast, setToast] = useState(false);
   const [toastError, setToastError] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [history, setHistory] = useState(MOCK_HISTORY);
+  const [history, setHistory] = useState(HISTORY);
   const [isPlaylist, setIsPlaylist] = useState(false);
   const pollRef = useRef(null);
 
